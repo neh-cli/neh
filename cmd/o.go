@@ -16,14 +16,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var OCmd = &cobra.Command{
+var oCmd = &cobra.Command{
     Use:   "o",
     Short: "Send a message to the server",
     Run:   runOCmd,
 }
 
 func init() {
-    rootCmd.AddCommand(OCmd)
+    rootCmd.AddCommand(oCmd)
 }
 
 func runOCmd(cmd *cobra.Command, args []string) {
