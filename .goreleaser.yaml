@@ -161,6 +161,7 @@ brews:
   - repository:
       owner: neh-cli
       name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     # Alternative names for the current recipe.
     #
     # Useful if you want to publish a versioned formula as well, so users can
