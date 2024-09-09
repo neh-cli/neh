@@ -47,7 +47,7 @@ changelog:
   # This may result in an empty release notes on GitHub/GitLab/Gitea.
   #
   # Templates: allowed.
-  disable: "{{ .Env.CREATE_CHANGELOG }}"
+  # disable: "{{ .Env.CREATE_CHANGELOG }}"
 
   # Changelog generation implementation to use.
   #
@@ -156,3 +156,93 @@ changelog:
     # `<abbrev-commit>[:] <title-commit>`.
     include:
       - "^feat:"
+
+brews:
+  - repository:
+      owner: neh-cli
+      name: homebrew-tap
+    # Alternative names for the current recipe.
+    #
+    # Useful if you want to publish a versioned formula as well, so users can
+    # more easily downgrade.
+    #
+    # This feature is only available in GoReleaser Pro.
+    # Templates: allowed.
+    # alternative_names:
+    #   - myproject@{{ .Version }}
+    #   - myproject@{{ .Major }}
+
+    goarm: 7
+
+    # NOTE: make sure the url_template, the token and given repo (github or
+    # gitlab) owner and name are from the same kind.
+    # We will probably unify this in the next major version like it is
+    # done with scoop.
+
+    # URL which is determined by the given Token (github, gitlab or gitea).
+    #
+    # Default depends on the client.
+    # Templates: allowed.
+    # url_template: "https://github.mycompany.com/foo/bar/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+
+    # Directory inside the repository to put the formula.
+    directory: Formula
+
+    # Your app's homepage.
+    #
+    # Default: inferred from global metadata.
+    homepage: "https://github.com/neh-cli/neh"
+
+    # Your app's description.
+    #
+    # Templates: allowed.
+    # Default: inferred from global metadata.
+    description: "Lightweight CLI client for interacting with AI using large language models (LLM)"
+
+    # SPDX identifier of your app's license.
+    #
+    # Default: inferred from global metadata.
+    license: MIT
+
+    # Custom block for brew.
+    # Can be used to specify alternate downloads for devel or head releases.
+    # custom_block: |
+    #   head "https://github.com/some/package.git"
+    #   ...
+
+    # Packages your package depends on.
+    dependencies:
+      - name: git
+        # Allow to specify the OS in which the dependency is required.
+        # Valid options are `mac` and `linux`.
+        # os: mac
+        # - name: zsh
+        #   type: optional
+        #   - name: fish
+        #     version: v1.2.3
+        #   # if providing both version and type, only the type will be taken into
+        #   # account.
+        #   - name: elvish
+        #     type: optional
+        #     version: v1.2.3
+
+    # So you can `brew test` your formula.
+    #
+    # Template: allowed
+    test: |
+      system "#{bin}/neh version"
+
+    # Custom install script for brew.
+    #
+    # Template: allowed
+    # Default: 'bin.install "BinaryName"'.
+    # install: |
+    #   bin.install "some_other_name"
+    #   bash_completion.install "completions/foo.bash" => "foo"
+
+    # Additional install instructions so you don't need to override `install`.
+    #
+    # Template: allowed
+    # extra_install: |
+    #   bash_completion.install "completions/foo.bash" => "foo"
+    #   man1.install "man/foo.1.gz"

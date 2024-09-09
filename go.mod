@@ -1,4 +1,4 @@
-module github.com/gipcompany/neh
+module github.com/neh-cli/neh
 
 go 1.23.0
 
