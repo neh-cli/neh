@@ -1,4 +1,5 @@
 /*
+* filename: cmd/version.go
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 
 */
@@ -11,7 +12,7 @@ import (
 )
 
 // Define the version information
-const Version = "0.0.3"
+const Version = "0.0.4"
 
 // versionCmd represents the `neh version` command
 var versionCmd = &cobra.Command{
