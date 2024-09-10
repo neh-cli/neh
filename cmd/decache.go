@@ -1,4 +1,4 @@
-// filename: cmd/o.go
+// filename: cmd/decache.go
 
 package cmd
 
@@ -12,22 +12,23 @@ import (
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
 	"github.com/google/uuid"
-	"github.com/spf13/cobra"
 	"github.com/neh-cli/neh/cmd/shared"
+	"github.com/spf13/cobra"
 )
 
-var oCmd = &cobra.Command{
-    Use:   "o",
-    Short: "Send a message to the server",
-    Run:   runOCmd,
+var decacheCmd = &cobra.Command{
+	Use:   "decache",
+	Short: "Remove all query history",
+	Long: `This command deletes all previous query history stored on the server.
+Use this command to clear any saved interactions with the AI.`,
+	Run:   runDecacheCmd,
 }
 
 func init() {
-    rootCmd.AddCommand(oCmd)
+	rootCmd.AddCommand(decacheCmd)
 }
 
-func runOCmd(cmd *cobra.Command, args []string) {
-    originalMessage := args[0]
+func runDecacheCmd(cmd *cobra.Command, args []string) {
     personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
     if personalAccessToken == "" {
         fmt.Println("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN.")
@@ -62,7 +63,7 @@ func runOCmd(cmd *cobra.Command, args []string) {
             fmt.Println("")
             break
         } else if message["type"] != nil {
-            shared.HandleActionCableMessages(conn, "o", message, originalMessage, &requestSent)
+            shared.HandleActionCableMessages(conn, "decache", message, "", &requestSent)
         } else {
             shared.HandleBroadcastedMessages(conn, message, &messagePool, &expectedSequenceNumber)
         }
