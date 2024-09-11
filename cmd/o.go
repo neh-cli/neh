@@ -3,15 +3,16 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"sync"
+    "context"
+    "fmt"
+    "net/http"
+    "os"
+    "strings"
+    "sync"
 
-	"github.com/coder/websocket"
-	"github.com/spf13/cobra"
-	"github.com/neh-cli/neh/cmd/shared"
+    "github.com/coder/websocket"
+    "github.com/spf13/cobra"
+    "github.com/neh-cli/neh/cmd/shared"
 )
 
 var oCmd = &cobra.Command{
@@ -25,7 +26,8 @@ func init() {
 }
 
 func runOCmd(cmd *cobra.Command, args []string) {
-    originalMessage := args[0]
+    commandName := "o"
+    userMessage := strings.Join(args, " ")
     personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
     if personalAccessToken == "" {
         fmt.Println("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
@@ -44,5 +46,5 @@ func runOCmd(cmd *cobra.Command, args []string) {
     }
     defer conn.Close(websocket.StatusInternalError, "Internal error")
 
-    shared.HandleWebSocketMessages(ctx, conn, "o", originalMessage, &sync.Map{}, 1, false)
+    shared.HandleWebSocketMessages(ctx, conn, commandName, userMessage, &sync.Map{}, 1, false)
 }
