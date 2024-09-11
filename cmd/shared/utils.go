@@ -24,6 +24,23 @@ func GetWSUrl() string {
 	return "wss://yoryo-app.onrender.com/cable"
 }
 
+func InitializeWebSocketConnection(ctx context.Context, personalAccessToken string) (*websocket.Conn, error) {
+    wsURL := GetWSUrl()
+    headers := http.Header{}
+    headers.Add("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
+
+    conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+        HTTPHeader: headers,
+    })
+    if err != nil {
+        return nil, err
+    }
+
+    uuidStr := uuid.New().String()
+    Subscribe(conn, uuidStr)
+    return conn, nil
+}
+
 func Subscribe(conn *websocket.Conn, uuid string) {
     identifier := map[string]interface{}{
         "channel": "LargeLanguageModelQueryChannel",
@@ -59,6 +76,22 @@ func HandleActionCableMessages(conn *websocket.Conn, command string, message map
     default:
         fmt.Printf("unknown message type in handleActionCableMessages: %s. Closing connection.\n", message["type"])
         conn.Close(websocket.StatusNormalClosure, "Normal closure")
+    }
+}
+
+func HandleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, expectedSequenceNumber int, requestSent bool) {
+    for {
+        var message map[string]interface{}
+        err := wsjson.Read(ctx, conn, &message)
+
+        if err != nil {
+            fmt.Println("")
+            break
+        } else if message["type"] != nil {
+            HandleActionCableMessages(conn, command, message, originalMessage, &requestSent)
+        } else {
+            HandleBroadcastedMessages(conn, message, messagePool, &expectedSequenceNumber)
+        }
     }
 }
 
