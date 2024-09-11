@@ -27,6 +27,8 @@ func init() {
 }
 
 func runDecacheCmd(cmd *cobra.Command, args []string) {
+    commandName := "decache"
+    userMessage := ""
     personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
     if personalAccessToken == "" {
         fmt.Println("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
@@ -39,12 +41,11 @@ func runDecacheCmd(cmd *cobra.Command, args []string) {
     ctx := context.Background()
     conn, err := shared.InitializeWebSocketConnection(ctx, personalAccessToken)
 
-
     if err != nil {
         fmt.Printf("Failed to connect to WebSocket: %v\n", err)
         return
     }
     defer conn.Close(websocket.StatusInternalError, "Internal error")
 
-    shared.HandleWebSocketMessages(ctx, conn, "decache", "", &sync.Map{}, 1, false)
+    shared.HandleWebSocketMessages(ctx, conn, commandName, userMessage, &sync.Map{}, 1, false)
 }
