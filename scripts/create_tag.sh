@@ -13,6 +13,14 @@ fi
 
 TAG=$1
 
+# Extract the version from cmd/version.go using awk
+VERSION=$(awk -F'"' '/const Version =/ {print $2}' cmd/version.go)
+
+if [ "$TAG" != "v$VERSION" ]; then
+  echo "Error: Specified tag ($TAG) does not match the version in cmd/version.go (v$VERSION)"
+  exit 1
+fi
+
 ./scripts/delete_tag.sh $TAG
 
 # Create and push the new tag
