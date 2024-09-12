@@ -3,25 +3,45 @@
 package shared
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"sync"
+    "bytes"
+    "context"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "sync"
 
-	"github.com/coder/websocket"
-	"github.com/coder/websocket/wsjson"
-	"github.com/google/uuid"
+    "github.com/coder/websocket"
+    "github.com/coder/websocket/wsjson"
+    "github.com/google/uuid"
 )
 
+func ExecuteWebSocketCommand(command, message string, waitForResponse bool) error {
+    personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
+    if personalAccessToken == "" {
+        return fmt.Errorf("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
+    }
+
+    headers := http.Header{}
+    headers.Add("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
+
+    ctx := context.Background()
+    conn, err := InitializeWebSocketConnection(ctx, personalAccessToken)
+    if err != nil {
+        return fmt.Errorf("Failed to connect to WebSocket: %v", err)
+    }
+    defer conn.Close(websocket.StatusInternalError, "Internal error")
+
+    HandleWebSocketMessages(ctx, conn, command, message, &sync.Map{}, waitForResponse)
+    return nil
+}
+
 func GetWSUrl() string {
-	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
-		return "ws://localhost:6060/cable"
-	}
-	return "wss://yoryo-app.onrender.com/cable"
+    if os.Getenv("WORKING_ON_LOCALHOST") != "" {
+        return "ws://localhost:6060/cable"
+    }
+    return "wss://yoryo-app.onrender.com/cable"
 }
 
 func InitializeWebSocketConnection(ctx context.Context, personalAccessToken string) (*websocket.Conn, error) {
@@ -79,7 +99,9 @@ func HandleActionCableMessages(conn *websocket.Conn, command string, message map
     }
 }
 
-func HandleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, expectedSequenceNumber int, requestSent bool) {
+func HandleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, requestSent bool) {
+    expectedSequenceNumber := 1
+
     for {
         var message map[string]interface{}
         err := wsjson.Read(ctx, conn, &message)

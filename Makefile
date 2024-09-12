@@ -14,4 +14,7 @@ clean:
 test:
 	$(GOCMD) test -v ./...
 
+tidy:
+	$(GOCMD) mod tidy
+
 .PHONY: build clean

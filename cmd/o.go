@@ -1,22 +1,18 @@
-// filename: cmd/o.go
-
+// File: cmd/o.go
+//
+// This file contains the implementation of the "o" command, which sends an inquiry message to the AI.
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"sync"
+    "fmt"
 
-	"github.com/coder/websocket"
-	"github.com/spf13/cobra"
-	"github.com/neh-cli/neh/cmd/shared"
+    "github.com/neh-cli/neh/cmd/shared"
+    "github.com/spf13/cobra"
 )
 
 var oCmd = &cobra.Command{
     Use:   "o",
-    Short: "Send a message to the server",
+    Short: "Send an inquiry message to the AI",
     Run:   runOCmd,
 }
 
@@ -25,24 +21,13 @@ func init() {
 }
 
 func runOCmd(cmd *cobra.Command, args []string) {
+    if len(args) == 0 {
+        fmt.Println("Please provide a message to send")
+        return
+    }
     originalMessage := args[0]
-    personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
-    if personalAccessToken == "" {
-        fmt.Println("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
-        return
-    }
-
-    headers := http.Header{}
-    headers.Add("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
-
-    ctx := context.Background()
-    conn, err := shared.InitializeWebSocketConnection(ctx, personalAccessToken)
-
+    err := shared.ExecuteWebSocketCommand("o", originalMessage, false)
     if err != nil {
-        fmt.Printf("Failed to connect to WebSocket: %v\n", err)
-        return
+        fmt.Println(err)
     }
-    defer conn.Close(websocket.StatusInternalError, "Internal error")
-
-    shared.HandleWebSocketMessages(ctx, conn, "o", originalMessage, &sync.Map{}, 1, false)
 }
