@@ -3,25 +3,68 @@
 package shared
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"sync"
+    "bytes"
+    "context"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "sync"
+    "path/filepath"
+    "runtime"
+    "strings"
 
-	"github.com/coder/websocket"
-	"github.com/coder/websocket/wsjson"
-	"github.com/google/uuid"
+    "github.com/coder/websocket"
+    "github.com/coder/websocket/wsjson"
+    "github.com/google/uuid"
+    "github.com/spf13/cobra"
 )
 
+// GetCommandName extracts the command name based on the filename.
+func GetCommandName() string {
+    _, file, _, _ := runtime.Caller(1)
+    base := filepath.Base(file)
+    return strings.TrimSuffix(base, filepath.Ext(base))
+}
+
+// RunDynamicCmd returns a function that initializes and handles a WebSocket.
+func RunDynamicCmd(cmdName string, getMessage func(args []string) string) func(cmd *cobra.Command, args []string) {
+    return func(cmd *cobra.Command, args []string) {
+        InitializeAndHandleWebSocket(cmdName, getMessage(args))
+    }
+}
+
+// Function to initialize and handle WebSocket connection
+func InitializeAndHandleWebSocket(commandName string, userMessage string) {
+    personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
+    if personalAccessToken == "" {
+        fmt.Println("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
+        return
+    }
+
+    headers := http.Header{}
+    headers.Add("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
+
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+    conn, err := InitializeWebSocketConnection(ctx, personalAccessToken)
+
+    if err != nil {
+        fmt.Printf("Failed to connect to WebSocket: %v\n", err)
+        return
+    }
+    defer conn.Close(websocket.StatusInternalError, "Internal error")
+
+    HandleWebSocketMessages(ctx, conn, commandName, userMessage, &sync.Map{}, 1, false)
+}
+
 func GetWSUrl() string {
-	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
-		return "ws://localhost:6060/cable"
-	}
-	return "wss://yoryo-app.onrender.com/cable"
+    if os.Getenv("WORKING_ON_LOCALHOST") != "" {
+        return "ws://localhost:6060/cable"
+    }
+    return "wss://yoryo-app.onrender.com/cable"
 }
 
 func InitializeWebSocketConnection(ctx context.Context, personalAccessToken string) (*websocket.Conn, error) {
