@@ -79,7 +79,7 @@ changelog:
   # 0: use whatever the changelog implementation gives you
   # -1: remove the commit hash from the changelog
   # any other number: max length.
-  abbrev: -1
+  abbrev: 7
 
   # Paths to filter the commits for.
   # Only works when `use: git`, otherwise ignored.
@@ -108,6 +108,29 @@ changelog:
   #     order: 1
   #   - title: Others
   #     order: 999
+  groups:
+    - title: Dependency updates
+      regexp: '^.*?(.+)\(deps\)!?:.+$'
+      order: 300
+    - title: "New Features"
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 100
+    - title: "Security updates"
+      regexp: '^.*?sec(\(.+\))??!?:.+$'
+      order: 150
+    - title: "Bug fixes"
+      regexp: '^.*?(fix|refactor)(\(.+\))??!?:.+$'
+      order: 200
+    - title: "Documentation updates"
+      regexp: ^.*?docs?(\(.+\))??!?:.+$
+      order: 400
+    - title: "Build process updates"
+      regexp: ^.*?(build|ci)(\(.+\))??!?:.+$
+      order: 400
+    - title: Other work
+      order: 9999
+
+
 
   #     # A group can have subgroups.
   #     # If you use this, all the commits that match the parent group will also
@@ -145,6 +168,17 @@ changelog:
       - "^docs:"
       - typo
       - (?i)foo
+      - '(?i)^docs?:'
+      - '(?i)^docs\([^:]+\):'
+      - '(?i)^docs\[[^:]+\]:'
+      - '^tests?:'
+      - '(?i)^dev:'
+      - '(?i)^chore:'
+      - '^build\(deps\): bump .* in /docs \(#\d+\)'
+      - '^build\(deps\): bump .* in /\.github/peril \(#\d+\)'
+      - '^build\(deps\): bump .* in /scripts/gen_github_action_config \(#\d+\)'
+      - Merge pull request
+      - Merge branch
 
     # Commit messages matching the regexp listed here will be the only ones
     # added to the changelog
@@ -154,8 +188,15 @@ changelog:
     # Matches are performed against the first line of the commit message only,
     # prefixed with the commit SHA1, usually in the form of
     # `<abbrev-commit>[:] <title-commit>`.
-    include:
-      - "^feat:"
+    # include:
+    #   - "^feat:"
+
+release:
+  github:
+    owner: neh-cli
+    name: neh
+  header: |
+    `neh` is a CLI application that allows you to interact with AI.
 
 brews:
   - repository:
