@@ -3,23 +3,46 @@
 package cmd
 
 import (
-    "strings"
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"sync"
 
-    "github.com/neh-cli/neh/cmd/shared"
-    "github.com/spf13/cobra"
+	"github.com/coder/websocket"
+	"github.com/spf13/cobra"
+	"github.com/neh-cli/neh/cmd/shared"
 )
 
+var oCmd = &cobra.Command{
+    Use:   "o",
+    Short: "Send a message to the server",
+    Run:   runOCmd,
+}
+
 func init() {
-    cmdName := shared.GetCommandName()
+    rootCmd.AddCommand(oCmd)
+}
 
-    getMessage := func(args []string) string {
-        return strings.Join(args, " ")
+func runOCmd(cmd *cobra.Command, args []string) {
+    originalMessage := args[0]
+    personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
+    if personalAccessToken == "" {
+        fmt.Println("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
+        return
     }
 
-    var dynamicCmd = &cobra.Command{
-        Use:   cmdName,
-        Short: "Send an inquiry message to the AI",
-        Run:   shared.RunDynamicCmd(cmdName, getMessage),
+    headers := http.Header{}
+    headers.Add("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
+
+    ctx := context.Background()
+    conn, err := shared.InitializeWebSocketConnection(ctx, personalAccessToken)
+
+    if err != nil {
+        fmt.Printf("Failed to connect to WebSocket: %v\n", err)
+        return
     }
-    rootCmd.AddCommand(dynamicCmd)
+    defer conn.Close(websocket.StatusInternalError, "Internal error")
+
+    shared.HandleWebSocketMessages(ctx, conn, "o", originalMessage, &sync.Map{}, 1, false)
 }
