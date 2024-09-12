@@ -11,4 +11,7 @@ build:
 clean:
 	rm -f $(BINARY_NAME)
 
+test:
+	$(GOCMD) test -v ./...
+
 .PHONY: build clean
