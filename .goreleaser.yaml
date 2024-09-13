@@ -18,10 +18,19 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+    goarch:
+      - "386"
+      - amd64
+      - arm
+      - arm64
+      - ppc64
     goos:
       - linux
       - windows
       - darwin
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser -X main.treeState={{ .IsGitDirty }}
 
 archives:
   - format: tar.gz
@@ -288,3 +297,28 @@ brews:
     # extra_install: |
     #   bash_completion.install "completions/foo.bash" => "foo"
     #   man1.install "man/foo.1.gz"
+
+nfpms:
+  - file_name_template: "{{ .ConventionalFileName }}"
+    id: packages
+    homepage: https://github.com/neh-cli/neh
+    description: |-
+      Lightweight CLI client for interacting with AI
+      using large language models (LLM)
+    maintainer: Atsushi Ishida <gipcompany@gmail.com>
+    license: MIT
+    vendor: neh-cli
+    section: utils
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+    dependencies:
+      - git
+    recommends:
+      - golang
+    deb:
+      lintian_overrides:
+        - statically-linked-binary
+        - changelog-file-missing-in-native-package
