@@ -248,7 +248,7 @@ brews:
     #
     # Templates: allowed.
     # Default: inferred from global metadata.
-    description: "Lightweight CLI client for interacting with AI using large language models (LLM)"
+    description: "neh is a sleek CLI application designed for high-speed, real-time interaction with AI specializing in Large Language Models."
 
     # SPDX identifier of your app's license.
     #
