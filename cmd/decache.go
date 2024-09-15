@@ -22,8 +22,8 @@ func init() {
 }
 
 func runDecacheCmd(cmd *cobra.Command, args []string) {
-    err := shared.ExecuteWebSocketCommand("decache", "", false)
-
+    waitForResponse := false
+    err := shared.ExecuteWebSocketCommand("decache", "", waitForResponse)
     if err != nil {
         fmt.Println(err)
     }

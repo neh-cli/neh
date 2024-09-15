@@ -159,7 +159,7 @@ func onSubscribed(identifier string, command string, message string) {
     json.Unmarshal(respBody, &responseBody)
 
     if responseBody["message"] != nil {
-        fmt.Println(responseBody["message"])
+        fmt.Printf("%s", responseBody["message"])
     }
 }
 
