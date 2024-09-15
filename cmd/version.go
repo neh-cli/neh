@@ -12,7 +12,7 @@ import (
 )
 
 // Define the version information
-const Version = "0.0.6"
+const Version = "0.0.7"
 
 // versionCmd represents the `neh version` command
 var versionCmd = &cobra.Command{
