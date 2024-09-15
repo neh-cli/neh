@@ -5,6 +5,7 @@ package cmd
 
 import (
     "fmt"
+    "strings"
 
     "github.com/neh-cli/neh/cmd/shared"
     "github.com/spf13/cobra"
@@ -25,8 +26,10 @@ func runOCmd(cmd *cobra.Command, args []string) {
         fmt.Println("Please provide a message to send")
         return
     }
-    originalMessage := args[0]
-    err := shared.ExecuteWebSocketCommand("o", originalMessage, false)
+
+    originalMessage := strings.Join(args, " ")
+    waitForResponse := false
+    err := shared.ExecuteWebSocketCommand("o", originalMessage, waitForResponse)
     if err != nil {
         fmt.Println(err)
     }
