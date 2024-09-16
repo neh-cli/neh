@@ -1,7 +1,6 @@
 /*
 * filename: cmd/version.go
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
