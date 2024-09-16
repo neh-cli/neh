@@ -17,4 +17,4 @@ test:
 tidy:
 	$(GOCMD) mod tidy
 
-.PHONY: build clean
+.PHONY: build clean test tidy

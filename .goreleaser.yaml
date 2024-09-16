@@ -204,8 +204,9 @@ release:
   github:
     owner: neh-cli
     name: neh
-  header: |
-    `neh` is a CLI application that allows you to interact with AI.
+  header: |-
+    neh is a sleek CLI application designed for high-speed, real-time
+    interaction with AI specializing in Large Language Models.
 
 brews:
   - repository:
@@ -248,7 +249,9 @@ brews:
     #
     # Templates: allowed.
     # Default: inferred from global metadata.
-    description: "neh is a sleek CLI application designed for high-speed, real-time interaction with AI specializing in Large Language Models."
+    description: |-
+      neh is a sleek CLI application designed for high-speed, real-time
+      interaction with AI specializing in Large Language Models.
 
     # SPDX identifier of your app's license.
     #
@@ -303,8 +306,8 @@ nfpms:
     id: packages
     homepage: https://github.com/neh-cli/neh
     description: |-
-      Lightweight CLI client for interacting with AI
-      using large language models (LLM)
+      neh is a sleek CLI application designed for high-speed, real-time
+      interaction with AI specializing in Large Language Models.
     maintainer: Atsushi Ishida <gipcompany@gmail.com>
     license: MIT
     vendor: neh-cli
