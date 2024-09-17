@@ -1,4 +1,4 @@
-// File: cmd/decache.go
+// filename: cmd/decache.go
 package cmd
 
 import (
@@ -16,7 +16,9 @@ var decacheCmd = &cobra.Command{
 	Short: "Remove all query history",
 	Long: `This command deletes all previous query history stored on the server.
 Use this command to clear any saved interactions with the AI.`,
-	Run: runDecacheCmd,
+	Run: func(cmd *cobra.Command, args []string) {
+		runDecacheCmd(cmd, args, shared.ExecuteWebSocketCommand)
+	},
 }
 
 // The init function is used to add the decacheCmd to the rootCmd.
@@ -30,9 +32,9 @@ func init() {
 // This function uses the shared.ExecuteWebSocketCommand function to send
 // the "decache" command to the server.
 // It is set to send the command without waiting for a response from the server.
-func runDecacheCmd(cmd *cobra.Command, args []string) {
+func runDecacheCmd(cmd *cobra.Command, args []string, execFunc func(string, string, bool) error) {
 	waitForResponse := false
-	err := shared.ExecuteWebSocketCommand("decache", "", waitForResponse)
+	err := execFunc("decache", "", waitForResponse)
 	if err != nil {
 		fmt.Println(err)
 	}
