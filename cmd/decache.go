@@ -39,5 +39,3 @@ func runDecacheCmd(cmd *cobra.Command, args []string, execFunc func(string, stri
 		fmt.Println(err)
 	}
 }
-
-// TOOD: runDecacheCmd を実行すると標準出力に「Cache was successfully deleted.」と表示される。これをtestに追加したい。
