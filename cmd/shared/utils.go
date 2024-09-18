@@ -18,50 +18,98 @@ import (
 )
 
 func ExecuteWebSocketCommand(command, message string, waitForResponse bool) error {
-	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
-	if personalAccessToken == "" {
-		return fmt.Errorf("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
+	personalAccessToken, err := getPersonalAccessToken()
+	if err != nil {
+		return err
 	}
 
-	headers := http.Header{}
-	headers.Add("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
+	headers := createAuthorizationHeader(personalAccessToken)
 
 	ctx := context.Background()
-	conn, err := InitializeWebSocketConnection(ctx, personalAccessToken)
+	conn, err := initializeWebSocketConnection(ctx, headers)
 	if err != nil {
 		return fmt.Errorf("Failed to connect to WebSocket: %v", err)
 	}
 	defer conn.Close(websocket.StatusInternalError, "Internal error")
 
-	HandleWebSocketMessages(ctx, conn, command, message, &sync.Map{}, waitForResponse)
+	handleWebSocketMessages(ctx, conn, command, message, &sync.Map{}, waitForResponse)
 	return nil
 }
 
-func GetWSUrl() string {
+func initializeWebSocketConnection(ctx context.Context, headers http.Header) (*websocket.Conn, error) {
+	wsURL := getWSUrl()
+
+	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+		HTTPHeader: headers,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial websocket: %w", err)
+	}
+
+	uuidStr := uuid.New().String()
+	if err := subscribeToChannel(ctx, conn, uuidStr); err != nil {
+		conn.Close(websocket.StatusInternalError, "Subscription failed")
+		return nil, fmt.Errorf("failed to subscribe to channel: %w", err)
+	}
+
+	return conn, nil
+}
+
+func subscribeToChannel(ctx context.Context, conn *websocket.Conn, uuid string) error {
+	identifier, err := createIdentifier(uuid)
+	if err != nil {
+		return fmt.Errorf("failed to marshal identifier: %w", err)
+	}
+
+	content := createSubscriptionContent(identifier)
+
+	if err := wsjson.Write(ctx, conn, content); err != nil {
+		return fmt.Errorf("failed to write subscription message: %w", err)
+	}
+	return nil
+}
+
+func createIdentifier(uuid string) (string, error) {
+	identifier := map[string]interface{}{
+		"channel": "LargeLanguageModelQueryChannel",
+		"uuid":    uuid,
+	}
+	identifierJSON, err := json.Marshal(identifier)
+	if err != nil {
+		return "", err
+	}
+	return string(identifierJSON), nil
+}
+
+func createSubscriptionContent(identifier string) map[string]interface{} {
+	return map[string]interface{}{
+		"command":    "subscribe",
+		"identifier": identifier,
+	}
+}
+
+func getPersonalAccessToken() (string, error) {
+	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
+	if personalAccessToken == "" {
+		return "", fmt.Errorf("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
+	}
+	return personalAccessToken, nil
+}
+
+func createAuthorizationHeader(token string) http.Header {
+	headers := http.Header{}
+	headers.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	return headers
+}
+
+func getWSUrl() string {
 	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
 		return "ws://localhost:6060/cable"
 	}
 	return "wss://yoryo-app.onrender.com/cable"
 }
 
-func InitializeWebSocketConnection(ctx context.Context, personalAccessToken string) (*websocket.Conn, error) {
-	wsURL := GetWSUrl()
-	headers := http.Header{}
-	headers.Add("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
-
-	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
-		HTTPHeader: headers,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	uuidStr := uuid.New().String()
-	Subscribe(conn, uuidStr)
-	return conn, nil
-}
-
-func Subscribe(conn *websocket.Conn, uuid string) {
+func subscribe(conn *websocket.Conn, uuid string) {
 	identifier := map[string]interface{}{
 		"channel": "LargeLanguageModelQueryChannel",
 		"uuid":    uuid,
@@ -77,29 +125,49 @@ func Subscribe(conn *websocket.Conn, uuid string) {
 func HandleActionCableMessages(conn *websocket.Conn, command string, message map[string]interface{}, originalMessage string, requestSent *bool) {
 	switch message["type"] {
 	case "welcome":
-		uuid := uuid.New().String()
-		Subscribe(conn, uuid)
+		handleWelcomeMessage(conn)
 	case "confirm_subscription":
-		if !*requestSent {
-			if identifier, ok := message["identifier"].(string); ok {
-				onSubscribed(identifier, command, originalMessage)
-				*requestSent = true
-			} else {
-				fmt.Println("Error: 'identifier' field is missing or not a string")
-			}
-		}
+		handleConfirmSubscriptionMessage(conn, message, command, originalMessage, requestSent)
 	case "ping":
 		// do nothing
 	case "disconnect":
-		fmt.Printf("Connection has been disconnected. Reason: %s\n", message["reason"])
-		conn.Close(websocket.StatusNormalClosure, "Normal closure")
+		handleDisconnectMessage(conn, message)
 	default:
-		fmt.Printf("unknown message type in handleActionCableMessages: %s. Closing connection.\n", message["type"])
-		conn.Close(websocket.StatusNormalClosure, "Normal closure")
+		handleUnknownMessageType(conn, message)
 	}
 }
 
-func HandleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, requestSent bool) {
+func handleWelcomeMessage(conn *websocket.Conn) {
+	uuid := uuid.New().String()
+	subscribe(conn, uuid)
+}
+
+func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, requestSent *bool) {
+	if *requestSent {
+		return
+	}
+
+	identifier, ok := message["identifier"].(string)
+	if !ok {
+		fmt.Println("Error: 'identifier' field is missing or not a string")
+		return
+	}
+
+	onSubscribed(identifier, command, originalMessage)
+	*requestSent = true
+}
+
+func handleDisconnectMessage(conn *websocket.Conn, message map[string]interface{}) {
+	fmt.Printf("Connection has been disconnected. Reason: %s\n", message["reason"])
+	conn.Close(websocket.StatusNormalClosure, "Normal closure")
+}
+
+func handleUnknownMessageType(conn *websocket.Conn, message map[string]interface{}) {
+	fmt.Printf("unknown message type in handleActionCableMessages: %s. Closing connection.\n", message["type"])
+	conn.Close(websocket.StatusNormalClosure, "Normal closure")
+}
+
+func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, requestSent bool) {
 	expectedSequenceNumber := 1
 
 	for {
@@ -121,46 +189,79 @@ func onSubscribed(identifier string, command string, message string) {
 	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
 	httpURL := getHttpUrl(command)
 
-	var identifierMap map[string]interface{}
-	if err := json.Unmarshal([]byte(identifier), &identifierMap); err != nil {
+	identifierMap, err := unmarshalIdentifier(identifier)
+	if err != nil {
 		fmt.Printf("Failed to unmarshal identifier: %v\n", err)
 		return
 	}
 
-	reqBody := map[string]interface{}{
-		"message": message,
-		"uuid":    identifierMap["uuid"],
-		"token":   personalAccessToken,
+	uuid, ok := identifierMap["uuid"].(string)
+	if !ok {
+		fmt.Println("Error: 'uuid' field is missing or not a string")
+		return
 	}
-	body, err := json.Marshal(reqBody)
+
+	reqBody, err := createRequestBody(message, uuid, personalAccessToken)
 	if err != nil {
 		fmt.Printf("Failed to marshal request body: %v\n", err)
 		return
 	}
 
-	req, err := http.NewRequest("POST", httpURL, bytes.NewBuffer(body))
+	if err := sendHttpRequest(httpURL, reqBody, personalAccessToken); err != nil {
+		fmt.Printf("Failed to send HTTP request: %v\n", err)
+	}
+}
+
+func unmarshalIdentifier(identifier string) (map[string]interface{}, error) {
+	var identifierMap map[string]interface{}
+	if err := json.Unmarshal([]byte(identifier), &identifierMap); err != nil {
+		return nil, err
+	}
+	return identifierMap, nil
+}
+
+func createRequestBody(message, uuid, token string) ([]byte, error) {
+	reqBody := map[string]interface{}{
+		"message": message,
+		"uuid":    uuid,
+		"token":   token,
+	}
+	return json.Marshal(reqBody)
+}
+
+func sendHttpRequest(url string, body []byte, token string) error {
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Printf("Failed to create HTTP request: %v\n", err)
-		return
+		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", personalAccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Failed to send HTTP request: %v\n", err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 
-	respBody, _ := io.ReadAll(resp.Body)
+	return handleHttpResponse(resp)
+}
+
+func handleHttpResponse(resp *http.Response) error {
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
 	var responseBody map[string]interface{}
-	json.Unmarshal(respBody, &responseBody)
+	if err := json.Unmarshal(respBody, &responseBody); err != nil {
+		return err
+	}
 
 	if responseBody["message"] != nil {
 		fmt.Printf("%s", responseBody["message"])
 	}
+	return nil
 }
 
 func getHttpUrl(command string) string {
@@ -171,35 +272,48 @@ func getHttpUrl(command string) string {
 }
 
 func HandleBroadcastedMessages(conn *websocket.Conn, message map[string]interface{}, messagePool *sync.Map, expectedSequenceNumber *int) {
-	messageType, ok := message["type"].(string)
-	if !ok {
-		if innerMessage, ok := message["message"].(map[string]interface{}); ok {
-			messageType, ok = innerMessage["type"].(string)
-			if !ok {
-				fmt.Println("Error: 'type' field is missing or not a string in inner message")
-				return
-			}
-			message = innerMessage
-		} else {
-			fmt.Println("Error: 'type' field is missing or not a string")
-			return
-		}
+	messageType, message, err := extractMessageType(message)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
 	switch messageType {
 	case "output":
-		if sequenceNumber, ok := message["sequence_number"].(float64); ok {
-			messagePool.Store(int(sequenceNumber), message["body"].(string))
-			processMessageInOrder(messagePool, expectedSequenceNumber)
-		} else {
-			fmt.Println("Error: 'sequence_number' field is missing or not a float64")
-		}
+		handleOutputMessage(message, messagePool, expectedSequenceNumber)
 	case "error":
 		fmt.Printf("Error message received: %v\n", message["body"])
 	case "worker_done":
 		conn.Close(websocket.StatusNormalClosure, "Normal closure")
 	default:
 		fmt.Printf("Unknown message type in handleBroadcastedMessages: %v\n", messageType)
+	}
+}
+
+func extractMessageType(message map[string]interface{}) (string, map[string]interface{}, error) {
+	if messageType, ok := message["type"].(string); ok {
+		return messageType, message, nil
+	}
+
+	innerMessage, ok := message["message"].(map[string]interface{})
+	if !ok {
+		return "", nil, fmt.Errorf("Error: 'type' field is missing or not a string")
+	}
+
+	messageType, ok := innerMessage["type"].(string)
+	if !ok {
+		return "", nil, fmt.Errorf("Error: 'type' field is missing or not a string in inner message")
+	}
+
+	return messageType, innerMessage, nil
+}
+
+func handleOutputMessage(message map[string]interface{}, messagePool *sync.Map, expectedSequenceNumber *int) {
+	if sequenceNumber, ok := message["sequence_number"].(float64); ok {
+		messagePool.Store(int(sequenceNumber), message["body"].(string))
+		processMessageInOrder(messagePool, expectedSequenceNumber)
+	} else {
+		fmt.Println("Error: 'sequence_number' field is missing or not a float64")
 	}
 }
 
