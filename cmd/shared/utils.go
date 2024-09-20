@@ -168,7 +168,7 @@ func handleUnknownMessageType(conn *websocket.Conn, message map[string]interface
 }
 
 func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, requestSent bool) {
-	expectedSequenceNumber := 1
+	var expectedSequenceNumber uint = 1
 
 	for {
 		var message map[string]interface{}
@@ -271,7 +271,7 @@ func getHttpUrl(command string) string {
 	return fmt.Sprintf("https://yoryo-app.onrender.com/api/neh/%s", command)
 }
 
-func HandleBroadcastedMessages(conn *websocket.Conn, message map[string]interface{}, messagePool *sync.Map, expectedSequenceNumber *int) {
+func HandleBroadcastedMessages(conn *websocket.Conn, message map[string]interface{}, messagePool *sync.Map, expectedSequenceNumber *uint) {
 	messageType, message, err := extractMessageType(message)
 	if err != nil {
 		fmt.Println(err)
@@ -308,16 +308,16 @@ func extractMessageType(message map[string]interface{}) (string, map[string]inte
 	return messageType, innerMessage, nil
 }
 
-func handleOutputMessage(message map[string]interface{}, messagePool *sync.Map, expectedSequenceNumber *int) {
+func handleOutputMessage(message map[string]interface{}, messagePool *sync.Map, expectedSequenceNumber *uint) {
 	if sequenceNumber, ok := message["sequence_number"].(float64); ok {
-		messagePool.Store(int(sequenceNumber), message["body"].(string))
+		messagePool.Store(uint(sequenceNumber), message["body"].(string))
 		processMessageInOrder(messagePool, expectedSequenceNumber)
 	} else {
 		fmt.Println("Error: 'sequence_number' field is missing or not a float64")
 	}
 }
 
-func processMessageInOrder(messagePool *sync.Map, expectedSequenceNumber *int) {
+func processMessageInOrder(messagePool *sync.Map, expectedSequenceNumber *uint) {
 	for {
 		if value, ok := messagePool.Load(*expectedSequenceNumber); ok {
 			fmt.Print(value)

@@ -30,6 +30,7 @@ func runOCmd(cmd *cobra.Command, args []string) {
 	originalMessage := strings.Join(args, " ")
 	waitForResponse := false
 	err := shared.ExecuteWebSocketCommand("o", originalMessage, waitForResponse)
+
 	if err != nil {
 		fmt.Println(err)
 	}
