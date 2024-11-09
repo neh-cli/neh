@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+magick logo_black.png -resize 16x16 logo_16.png
+magick logo_black.png -resize 24x24 logo_24.png
+magick logo_black.png -resize 32x32 logo_32.png
+magick logo_black.png -resize 64x64 logo_64.png
+
+magick logo_16.png logo_24.png logo_32.png logo_64.png favicon.ico
+
+rm logo_16.png logo_24.png logo_32.png logo_64.png
