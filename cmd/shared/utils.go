@@ -187,6 +187,10 @@ func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command 
 
 func onSubscribed(identifier string, command string, message string) {
 	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
+	if os.Getenv("NEH_DEBUG") == "t" {
+		fmt.Printf("Personal Access Token: %s\n", personalAccessToken)
+	}
+
 	httpURL := getHttpUrl(command)
 
 	identifierMap, err := unmarshalIdentifier(identifier)
