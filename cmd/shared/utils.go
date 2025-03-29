@@ -270,7 +270,11 @@ func handleHttpResponse(resp *http.Response) error {
 
 func getNehServerEndpoint(command string) string {
 	if os.Getenv("WORKING_ON_LOCALHOST") == "t" {
-		return fmt.Sprintf("http://localhost:6060/api/neh/%s", command)
+		developmentEndpoint := os.Getenv("NEH_SERVER_ENDPOINT_DEVELOPMENT")
+		if developmentEndpoint == "" {
+			panic("The environment variable NEH_SERVER_ENDPOINT_DEVELOPMENT is not set")
+		}
+		return fmt.Sprintf("%s%s", developmentEndpoint, command)
 	}
 	return fmt.Sprintf("https://yoryo-app.onrender.com/api/neh/%s", command)
 }
