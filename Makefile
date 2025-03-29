@@ -2,14 +2,17 @@
 GOCMD=go
 GOBUILD=$(GOCMD) build
 BINARY_NAME=neh
+BUILD_DIR=build/bin
 
 # Build the project
 build:
-	$(GOBUILD) -o $(BINARY_NAME)
+	mkdir -p $(BUILD_DIR)
+	$(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME)
 
 # Clean the build files
 clean:
 	rm -f $(BINARY_NAME)
+	rm -f $(BUILD_DIR)/$(BINARY_NAME)
 
 test:
 	$(GOCMD) test -v ./...

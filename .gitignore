@@ -27,3 +27,5 @@ go.work.sum
 .envrc
 
 dist/
+
+/build/bin/
