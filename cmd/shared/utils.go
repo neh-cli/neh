@@ -269,7 +269,7 @@ func handleHttpResponse(resp *http.Response) error {
 }
 
 func getNehServerEndpoint(command string) string {
-	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
+	if os.Getenv("WORKING_ON_LOCALHOST") == "t" {
 		return fmt.Sprintf("http://localhost:6060/api/neh/%s", command)
 	}
 	return fmt.Sprintf("https://yoryo-app.onrender.com/api/neh/%s", command)
