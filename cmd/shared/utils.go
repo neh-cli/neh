@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func ExecuteWebSocketCommand(command, message string, waitForResponse bool) error {
+func ExecuteWebSocketCommand(command, message string) error {
 	personalAccessToken, err := getPersonalAccessToken()
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func ExecuteWebSocketCommand(command, message string, waitForResponse bool) erro
 	}
 	defer conn.Close(websocket.StatusInternalError, "Internal error")
 
-	handleWebSocketMessages(ctx, conn, command, message, &sync.Map{}, waitForResponse)
+	handleWebSocketMessages(ctx, conn, command, message, &sync.Map{})
 	return nil
 }
 
@@ -122,12 +122,12 @@ func subscribe(conn *websocket.Conn, uuid string) {
 	wsjson.Write(context.Background(), conn, content)
 }
 
-func HandleActionCableMessages(conn *websocket.Conn, command string, message map[string]interface{}, originalMessage string, requestSent *bool) {
+func HandleActionCableMessages(conn *websocket.Conn, command string, message map[string]interface{}, originalMessage string) {
 	switch message["type"] {
 	case "welcome":
 		handleWelcomeMessage(conn)
 	case "confirm_subscription":
-		handleConfirmSubscriptionMessage(conn, message, command, originalMessage, requestSent)
+		handleConfirmSubscriptionMessage(conn, message, command, originalMessage)
 	case "ping":
 		// do nothing
 	case "disconnect":
@@ -142,11 +142,7 @@ func handleWelcomeMessage(conn *websocket.Conn) {
 	subscribe(conn, uuid)
 }
 
-func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, requestSent *bool) {
-	if *requestSent {
-		return
-	}
-
+func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string) {
 	identifier, ok := message["identifier"].(string)
 	if !ok {
 		fmt.Println("Error: 'identifier' field is missing or not a string")
@@ -154,7 +150,6 @@ func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]i
 	}
 
 	onSubscribed(identifier, command, originalMessage)
-	*requestSent = true
 }
 
 func handleDisconnectMessage(conn *websocket.Conn, message map[string]interface{}) {
@@ -167,7 +162,7 @@ func handleUnknownMessageType(conn *websocket.Conn, message map[string]interface
 	conn.Close(websocket.StatusNormalClosure, "Normal closure")
 }
 
-func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, requestSent bool) {
+func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map) {
 	var expectedSequenceNumber uint = 1
 
 	for {
@@ -178,7 +173,7 @@ func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command 
 			fmt.Println("")
 			break
 		} else if message["type"] != nil {
-			HandleActionCableMessages(conn, command, message, originalMessage, &requestSent)
+			HandleActionCableMessages(conn, command, message, originalMessage)
 		} else {
 			HandleBroadcastedMessages(conn, message, messagePool, &expectedSequenceNumber)
 		}
