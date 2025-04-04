@@ -187,7 +187,11 @@ func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command 
 
 func onSubscribed(identifier string, command string, message string) {
 	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
-	httpURL := getHttpUrl(command)
+	if os.Getenv("NEH_DEBUG") == "t" {
+		fmt.Printf("Personal Access Token: %s\n", personalAccessToken)
+	}
+
+	httpURL := getNehServerEndpoint(command)
 
 	identifierMap, err := unmarshalIdentifier(identifier)
 	if err != nil {
@@ -264,9 +268,13 @@ func handleHttpResponse(resp *http.Response) error {
 	return nil
 }
 
-func getHttpUrl(command string) string {
-	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
-		return fmt.Sprintf("http://localhost:6060/api/neh/%s", command)
+func getNehServerEndpoint(command string) string {
+	if os.Getenv("WORKING_ON_LOCALHOST") == "t" {
+		developmentEndpoint := os.Getenv("NEH_SERVER_ENDPOINT_DEVELOPMENT")
+		if developmentEndpoint == "" {
+			panic("The environment variable NEH_SERVER_ENDPOINT_DEVELOPMENT is not set")
+		}
+		return fmt.Sprintf("%s%s", developmentEndpoint, command)
 	}
 	return fmt.Sprintf("https://yoryo-app.onrender.com/api/neh/%s", command)
 }

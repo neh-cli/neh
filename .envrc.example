@@ -1,0 +1,4 @@
+export WORKING_ON_LOCALHOST=t
+export NEH_DEBUG=t
+export NEH_PERSONAL_ACCESS_TOKEN=
+export NEH_SERVER_ENDPOINT_DEVELOPMENT=http://localhost:6060/api/neh/
