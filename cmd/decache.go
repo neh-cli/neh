@@ -32,7 +32,7 @@ func init() {
 // It is set to send the command without waiting for a response from the server.
 func runDecacheCmd(cmd *cobra.Command, args []string) {
 	queryMessage := ""
-	err := shared.ExecuteWebSocketCommand("decache", queryMessage)
+	err := shared.ExecuteWebSocketCommand("decache", queryMessage, "")
 	if err != nil {
 		fmt.Println(err)
 	}

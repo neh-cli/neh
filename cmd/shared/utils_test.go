@@ -13,7 +13,7 @@ import (
 func TestExecuteWebSocketCommand(t *testing.T) {
 	os.Setenv("NEH_PERSONAL_ACCESS_TOKEN", "dummy_token")
 
-	err := ExecuteWebSocketCommand("test_command", "test_message")
+	err := ExecuteWebSocketCommand("test_command", "test_message", "clipboard_message")
 	if err != nil {
 		t.Errorf("ExecuteWebSocketCommand failed: %v", err)
 	}
