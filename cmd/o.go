@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/neh-cli/neh/cmd/shared"
@@ -27,9 +28,12 @@ func runOCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	originalMessage := strings.Join(args, " ")
-	waitForResponse := false
-	err := shared.ExecuteWebSocketCommand("o", originalMessage, waitForResponse)
+	queryMessage := strings.Join(args, " ")
+	if os.Getenv("NEH_DEBUG") == "t" {
+		fmt.Printf("Query Message: %s\n", queryMessage)
+	}
+
+	err := shared.ExecuteWebSocketCommand("o", queryMessage)
 
 	if err != nil {
 		fmt.Println(err)

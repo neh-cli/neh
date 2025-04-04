@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func ExecuteWebSocketCommand(command, message string, waitForResponse bool) error {
+func ExecuteWebSocketCommand(command, message string) error {
 	personalAccessToken, err := getPersonalAccessToken()
 	if err != nil {
 		return err
@@ -32,7 +32,8 @@ func ExecuteWebSocketCommand(command, message string, waitForResponse bool) erro
 	}
 	defer conn.Close(websocket.StatusInternalError, "Internal error")
 
-	handleWebSocketMessages(ctx, conn, command, message, &sync.Map{}, waitForResponse)
+	requestSent := false
+	handleWebSocketMessages(ctx, conn, command, message, &sync.Map{}, requestSent)
 	return nil
 }
 
@@ -143,6 +144,7 @@ func handleWelcomeMessage(conn *websocket.Conn) {
 }
 
 func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, requestSent *bool) {
+	// Ensure the subscription request is not sent more than once
 	if *requestSent {
 		return
 	}
