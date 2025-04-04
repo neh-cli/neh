@@ -17,10 +17,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func ExecuteWebSocketCommand(command, message string) error {
+func ExecuteWebSocketCommand(command, message string, clipboardMessage string) error {
 	personalAccessToken, err := getPersonalAccessToken()
 	if err != nil {
 		return err
+	}
+
+	if os.Getenv("NEH_DEBUG") == "t" {
+		fmt.Printf("Clipboard Message: %s\n", clipboardMessage)
 	}
 
 	headers := createAuthorizationHeader(personalAccessToken)
@@ -33,7 +37,7 @@ func ExecuteWebSocketCommand(command, message string) error {
 	defer conn.Close(websocket.StatusInternalError, "Internal error")
 
 	requestSent := false
-	handleWebSocketMessages(ctx, conn, command, message, &sync.Map{}, requestSent)
+	handleWebSocketMessages(ctx, conn, command, message, clipboardMessage, &sync.Map{}, requestSent)
 	return nil
 }
 
@@ -123,12 +127,12 @@ func subscribe(conn *websocket.Conn, uuid string) {
 	wsjson.Write(context.Background(), conn, content)
 }
 
-func HandleActionCableMessages(conn *websocket.Conn, command string, message map[string]interface{}, originalMessage string, requestSent *bool) {
+func HandleActionCableMessages(conn *websocket.Conn, command string, message map[string]interface{}, originalMessage string, clipboardMessage string, requestSent *bool) {
 	switch message["type"] {
 	case "welcome":
 		handleWelcomeMessage(conn)
 	case "confirm_subscription":
-		handleConfirmSubscriptionMessage(conn, message, command, originalMessage, requestSent)
+		handleConfirmSubscriptionMessage(conn, message, command, originalMessage, clipboardMessage, requestSent)
 	case "ping":
 		// do nothing
 	case "disconnect":
@@ -143,7 +147,7 @@ func handleWelcomeMessage(conn *websocket.Conn) {
 	subscribe(conn, uuid)
 }
 
-func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, requestSent *bool) {
+func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, clipboardMessage string, requestSent *bool) {
 	// Ensure the subscription request is not sent more than once
 	if *requestSent {
 		return
@@ -155,7 +159,7 @@ func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]i
 		return
 	}
 
-	onSubscribed(identifier, command, originalMessage)
+	onSubscribed(identifier, command, originalMessage, clipboardMessage)
 	*requestSent = true
 }
 
@@ -169,7 +173,7 @@ func handleUnknownMessageType(conn *websocket.Conn, message map[string]interface
 	conn.Close(websocket.StatusNormalClosure, "Normal closure")
 }
 
-func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, messagePool *sync.Map, requestSent bool) {
+func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, clipboardMessage string, messagePool *sync.Map, requestSent bool) {
 	var expectedSequenceNumber uint = 1
 
 	for {
@@ -180,14 +184,14 @@ func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command 
 			fmt.Println("")
 			break
 		} else if message["type"] != nil {
-			HandleActionCableMessages(conn, command, message, originalMessage, &requestSent)
+			HandleActionCableMessages(conn, command, message, originalMessage, clipboardMessage, &requestSent)
 		} else {
 			HandleBroadcastedMessages(conn, message, messagePool, &expectedSequenceNumber)
 		}
 	}
 }
 
-func onSubscribed(identifier string, command string, message string) {
+func onSubscribed(identifier string, command string, message string, clipboardMessage string) {
 	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
 	if os.Getenv("NEH_DEBUG") == "t" {
 		fmt.Printf("Personal Access Token: %s\n", personalAccessToken)
@@ -198,23 +202,24 @@ func onSubscribed(identifier string, command string, message string) {
 	identifierMap, err := unmarshalIdentifier(identifier)
 	if err != nil {
 		fmt.Printf("Failed to unmarshal identifier: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	uuid, ok := identifierMap["uuid"].(string)
 	if !ok {
 		fmt.Println("Error: 'uuid' field is missing or not a string")
-		return
+		os.Exit(1)
 	}
 
-	reqBody, err := createRequestBody(message, uuid, personalAccessToken)
+	reqBody, err := createRequestBody(message, clipboardMessage, uuid, personalAccessToken)
 	if err != nil {
 		fmt.Printf("Failed to marshal request body: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	if err := sendHttpRequest(httpURL, reqBody, personalAccessToken); err != nil {
 		fmt.Printf("Failed to send HTTP request: %v\n", err)
+		os.Exit(1)
 	}
 }
 
@@ -226,11 +231,12 @@ func unmarshalIdentifier(identifier string) (map[string]interface{}, error) {
 	return identifierMap, nil
 }
 
-func createRequestBody(message, uuid, token string) ([]byte, error) {
+func createRequestBody(message, clipboardMessage, uuid, token string) ([]byte, error) {
 	reqBody := map[string]interface{}{
-		"message": message,
-		"uuid":    uuid,
-		"token":   token,
+		"message":           message,
+		"uuid":              uuid,
+		"token":             token,
+		"clipboard_message": clipboardMessage,
 	}
 	return json.Marshal(reqBody)
 }

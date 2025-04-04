@@ -3,6 +3,7 @@ module github.com/neh-cli/neh
 go 1.23.0
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/coder/websocket v1.8.12
 	github.com/google/uuid v1.6.0
 	github.com/spf13/cobra v1.8.1

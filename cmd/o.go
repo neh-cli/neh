@@ -33,7 +33,7 @@ func runOCmd(cmd *cobra.Command, args []string) {
 		fmt.Printf("Query Message: %s\n", queryMessage)
 	}
 
-	err := shared.ExecuteWebSocketCommand("o", queryMessage)
+	err := shared.ExecuteWebSocketCommand("o", queryMessage, "")
 
 	if err != nil {
 		fmt.Println(err)
