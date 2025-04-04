@@ -277,7 +277,7 @@ func handleHttpResponse(resp *http.Response) error {
 }
 
 func getNehServerEndpoint(command string) string {
-	if os.Getenv("WORKING_ON_LOCALHOST") == "t" {
+	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
 		developmentEndpoint := os.Getenv("NEH_SERVER_ENDPOINT_DEVELOPMENT")
 		if developmentEndpoint == "" {
 			panic("The environment variable NEH_SERVER_ENDPOINT_DEVELOPMENT is not set")
