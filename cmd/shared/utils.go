@@ -10,11 +10,13 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
 	"github.com/google/uuid"
+	"gopkg.in/yaml.v3"
 )
 
 func ExecuteWebSocketCommand(command, message string, clipboardMessage string) error {
@@ -232,6 +234,11 @@ func unmarshalIdentifier(identifier string) (map[string]interface{}, error) {
 }
 
 func createRequestBody(message, clipboardMessage, uuid, token string) ([]byte, error) {
+	lang := getLangFromConfig()
+	if os.Getenv("NEH_DEBUG") != "" {
+		fmt.Printf("Language: %s\n", lang)
+	}
+
 	reqBody := map[string]interface{}{
 		"message":           message,
 		"uuid":              uuid,
@@ -239,6 +246,34 @@ func createRequestBody(message, clipboardMessage, uuid, token string) ([]byte, e
 		"clipboard_message": clipboardMessage,
 	}
 	return json.Marshal(reqBody)
+}
+
+func getLangFromConfig() string {
+	defaultLang := "en"
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return defaultLang
+	}
+
+	configPath := filepath.Join(homeDir, ".config", "neh", "config.yml")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return defaultLang
+	}
+
+	var cfg struct {
+		Lang string `yaml:"lang"`
+	}
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return defaultLang
+	}
+
+	if cfg.Lang == "" {
+		return defaultLang
+	}
+
+	return cfg.Lang
 }
 
 func sendHttpRequest(url string, body []byte, token string) error {
