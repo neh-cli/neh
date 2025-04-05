@@ -6,7 +6,7 @@
 neh is a sleek CLI application designed for high-speed, real-time interaction with AI specializing in Large Language Models.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/neh-cli/neh/refs/heads/demo/screencast/screencast.gif" alt="Screencast">
+  <img src="https://raw.githubusercontent.com/neh-cli/neh/refs/heads/main/screencast/screencast.gif" alt="Screencast">
 </p>
 
 ## Installation
