@@ -5,6 +5,10 @@
 
 neh is a sleek CLI application designed for high-speed, real-time interaction with AI specializing in Large Language Models.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/neh-cli/neh/refs/heads/demo/screencast/screencast.gif" alt="Screencast">
+</p>
+
 ## Installation
 
 ### For macOS
@@ -12,7 +16,3 @@ neh is a sleek CLI application designed for high-speed, real-time interaction wi
 ```bash
 brew install neh-cli/tap/neh
 ```
-
-## Usage Example
-
-https://github.com/user-attachments/assets/f393f09e-ce2a-40c0-a7e4-fc7e27d09d84
