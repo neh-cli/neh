@@ -244,6 +244,7 @@ func createRequestBody(message, clipboardMessage, uuid, token string) ([]byte, e
 		"uuid":              uuid,
 		"token":             token,
 		"clipboard_message": clipboardMessage,
+		"lang":              lang,
 	}
 	return json.Marshal(reqBody)
 }
