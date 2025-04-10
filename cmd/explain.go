@@ -21,7 +21,6 @@ func init() {
 }
 
 func runExplainCmd(cmd *cobra.Command, args []string) {
-	// Retrieve the contents of the clipboard and store them in clipboardMessage
 	clipboardMessage, err := clipboard.ReadAll()
 	if err != nil {
 		fmt.Println("Operation aborted because clipboard contents could not be retrieved.", err)
