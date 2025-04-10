@@ -176,7 +176,7 @@ func handleUnknownMessageType(conn *websocket.Conn, message map[string]interface
 }
 
 func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, clipboardMessage string, messagePool *sync.Map, requestSent bool) {
-	var expectedSequenceNumber uint = 1
+	var expectedSequenceNumber uint = 0
 
 	for {
 		var message map[string]interface{}
