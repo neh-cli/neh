@@ -20,4 +20,8 @@ test:
 tidy:
 	$(GOCMD) mod tidy
 
+neh-decache: build
+	@echo "Running neh command..."
+	./build/bin/neh decache
+
 .PHONY: build clean test tidy
