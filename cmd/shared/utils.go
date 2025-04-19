@@ -110,7 +110,7 @@ func createAuthorizationHeader(token string) http.Header {
 }
 
 func getWSUrl() string {
-	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
+	if os.Getenv("NEH_WORKING_ON_LOCALHOST") != "" {
 		return "ws://localhost:6060/cable"
 	}
 	return "wss://yoryo-app.onrender.com/cable"
@@ -313,7 +313,7 @@ func handleHttpResponse(resp *http.Response) error {
 }
 
 func getNehServerEndpoint(command string) string {
-	if os.Getenv("WORKING_ON_LOCALHOST") != "" {
+	if os.Getenv("NEH_WORKING_ON_LOCALHOST") != "" {
 		developmentEndpoint := os.Getenv("NEH_SERVER_ENDPOINT_DEVELOPMENT")
 		if developmentEndpoint == "" {
 			panic("The environment variable NEH_SERVER_ENDPOINT_DEVELOPMENT is not set")
