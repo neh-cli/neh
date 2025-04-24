@@ -4,9 +4,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/neh-cli/neh/cmd/shared"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 // The statusCmd is a command to remove all query history.
@@ -39,8 +42,39 @@ func runStatusCmd(cmd *cobra.Command, args []string) {
 	fmt.Printf("Checking current status...\n")
 	fmt.Printf("Connecting to: %s\n", endpoint)
 
+	// Display current language setting
+	lang := getCurrentLanguage()
+	fmt.Printf("Current language: %s\n", lang)
+
 	err := shared.ExecuteWebSocketCommand("status", queryMessage, clipboardMessage)
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+// getCurrentLanguage gets the language from config file
+func getCurrentLanguage() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "en (default)"
+	}
+
+	configPath := filepath.Join(homeDir, ".config", "neh", "config.yml")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return "en (default)"
+	}
+
+	var cfg struct {
+		Lang string `yaml:"lang"`
+	}
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return "en (default)"
+	}
+
+	if cfg.Lang == "" {
+		return "en (default)"
+	}
+
+	return cfg.Lang
 }
