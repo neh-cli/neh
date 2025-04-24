@@ -199,7 +199,7 @@ func onSubscribed(identifier string, command string, message string, clipboardMe
 		fmt.Printf("Personal Access Token: %s\n", personalAccessToken)
 	}
 
-	httpURL := getNehServerEndpoint(command)
+	httpURL := GetNehServerEndpoint(command)
 
 	identifierMap, err := unmarshalIdentifier(identifier)
 	if err != nil {
@@ -312,7 +312,7 @@ func handleHttpResponse(resp *http.Response) error {
 	return nil
 }
 
-func getNehServerEndpoint(command string) string {
+func GetNehServerEndpoint(command string) string {
 	if os.Getenv("NEH_WORKING_ON_LOCALHOST") != "" {
 		developmentEndpoint := os.Getenv("NEH_SERVER_ENDPOINT_DEVELOPMENT")
 		if developmentEndpoint == "" {
