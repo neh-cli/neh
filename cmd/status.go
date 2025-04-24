@@ -14,10 +14,9 @@ import (
 // stored on the server.
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Remove all query history",
-	Long: `This command deletes all previous query history stored on the server.
-Use this command to clear any saved interactions with the AI.`,
-	Run: runStatusCmd,
+	Short: "Check status",
+	Long:  `Check the status of the connection endpoint and the subscribed plan.`,
+	Run:   runStatusCmd,
 }
 
 // The init function is used to add the statusCmd to the rootCmd.

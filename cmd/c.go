@@ -1,7 +1,3 @@
-// File: cmd/c.go
-//
-// This file contains the implementation of the "c" command, which sends the clipboard and message to the AI.
-
 package cmd
 
 import (
@@ -16,7 +12,7 @@ import (
 
 var cCmd = &cobra.Command{
 	Use:   "c",
-	Short: "Send an inquiry message to the AI",
+	Short: "Send the contents of the clipboard and a query about that content to the LLM",
 	Run:   runCCmd,
 }
 
