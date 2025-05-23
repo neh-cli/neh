@@ -11,9 +11,10 @@ import (
 )
 
 var gitifyCmd = &cobra.Command{
-	Use:   "gitify",
-	Short: "This command suggests the title of the issue you are currently working on, the git branch name, and even the git commit message from the contents of the clipboard.",
-	Run:   runGitifyCmd,
+	Use:    "gitify",
+	Short:  "This command suggests the title of the issue you are currently working on, the git branch name, and even the git commit message from the contents of the clipboard.",
+	Run:    runGitifyCmd,
+	Hidden: true,
 }
 
 func init() {
