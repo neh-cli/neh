@@ -48,4 +48,3 @@ neh completion fish | source
 ```
 
 To make this permanent, you can write the output to a file in your `~/.config/fish/completions` directory.
-```
