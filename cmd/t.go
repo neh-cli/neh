@@ -8,6 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	tModel string
+)
+
 var tCmd = &cobra.Command{
 	Use:   "t",
 	Short: "This command translates the contents of the clipboard into the language you are using.",
@@ -16,6 +20,7 @@ var tCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(tCmd)
+	tCmd.Flags().StringVar(&tModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
 }
 
 func runTCmd(cmd *cobra.Command, args []string) {
@@ -26,7 +31,7 @@ func runTCmd(cmd *cobra.Command, args []string) {
 	}
 
 	queryMessage := ""
-	err = shared.ExecuteWebSocketCommand("t", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("t", queryMessage, clipboardMessage, tModel)
 
 	if err != nil {
 		fmt.Println(err)

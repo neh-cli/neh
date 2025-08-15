@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	refineModel string
+)
+
 var refineCmd = &cobra.Command{
 	Use:   "refine",
 	Short: "This command refines the text in the clipboard.",
@@ -18,6 +22,7 @@ var refineCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(refineCmd)
+	refineCmd.Flags().StringVar(&refineModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
 }
 
 func runRefineCmd(cmd *cobra.Command, args []string) {
@@ -29,7 +34,7 @@ func runRefineCmd(cmd *cobra.Command, args []string) {
 	}
 
 	queryMessage := ""
-	err = shared.ExecuteWebSocketCommand("refine", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("refine", queryMessage, clipboardMessage, refineModel)
 
 	if err != nil {
 		fmt.Println(err)

@@ -22,7 +22,7 @@ func init() {
 func runClipCmd(cmd *cobra.Command, args []string) {
 	queryMessage := ""
 	clipboardMessage := ""
-	err := shared.ExecuteWebSocketCommand("clip", queryMessage, clipboardMessage)
+	err := shared.ExecuteWebSocketCommand("clip", queryMessage, clipboardMessage, "")
 	if err != nil {
 		fmt.Println(err)
 	}

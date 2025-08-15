@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	explainModel string
+)
+
 var explainCmd = &cobra.Command{
 	Use:   "explain",
 	Short: "This command sends the contents of the clipboard to the AI and receives an explanation from the AI.",
@@ -18,6 +22,7 @@ var explainCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(explainCmd)
+	explainCmd.Flags().StringVar(&explainModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
 }
 
 func runExplainCmd(cmd *cobra.Command, args []string) {
@@ -28,7 +33,7 @@ func runExplainCmd(cmd *cobra.Command, args []string) {
 	}
 
 	queryMessage := ""
-	err = shared.ExecuteWebSocketCommand("explain", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("explain", queryMessage, clipboardMessage, explainModel)
 
 	if err != nil {
 		fmt.Println(err)

@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	fixModel string
+)
+
 var fixCmd = &cobra.Command{
 	Use:   "fix",
 	Short: "This command sends content that seems to have problems to an LLM (Language Model) and requests proposed solutions.",
@@ -18,6 +22,7 @@ var fixCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(fixCmd)
+	fixCmd.Flags().StringVar(&fixModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
 }
 
 func runFixCmd(cmd *cobra.Command, args []string) {
@@ -29,7 +34,7 @@ func runFixCmd(cmd *cobra.Command, args []string) {
 	}
 
 	queryMessage := ""
-	err = shared.ExecuteWebSocketCommand("fix", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("fix", queryMessage, clipboardMessage, fixModel)
 
 	if err != nil {
 		fmt.Println(err)

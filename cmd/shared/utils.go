@@ -19,7 +19,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ExecuteWebSocketCommand(command, message string, clipboardMessage string) error {
+func ExecuteWebSocketCommand(command, message string, clipboardMessage string, model string) error {
 	personalAccessToken, err := getPersonalAccessToken()
 	if err != nil {
 		return err
@@ -27,6 +27,9 @@ func ExecuteWebSocketCommand(command, message string, clipboardMessage string) e
 
 	if os.Getenv("NEH_DEBUG") == "t" {
 		fmt.Printf("Clipboard Message: %s\n", clipboardMessage)
+		if model != "" {
+			fmt.Printf("Model: %s\n", model)
+		}
 	}
 
 	headers := createAuthorizationHeader(personalAccessToken)
@@ -39,7 +42,7 @@ func ExecuteWebSocketCommand(command, message string, clipboardMessage string) e
 	defer conn.Close(websocket.StatusInternalError, "Internal error")
 
 	requestSent := false
-	handleWebSocketMessages(ctx, conn, command, message, clipboardMessage, &sync.Map{}, requestSent)
+	handleWebSocketMessages(ctx, conn, command, message, clipboardMessage, model, &sync.Map{}, requestSent)
 	return nil
 }
 
@@ -129,12 +132,12 @@ func subscribe(conn *websocket.Conn, uuid string) {
 	wsjson.Write(context.Background(), conn, content)
 }
 
-func HandleActionCableMessages(conn *websocket.Conn, command string, message map[string]interface{}, originalMessage string, clipboardMessage string, requestSent *bool) {
+func HandleActionCableMessages(conn *websocket.Conn, command string, message map[string]interface{}, originalMessage string, clipboardMessage string, model string, requestSent *bool) {
 	switch message["type"] {
 	case "welcome":
 		handleWelcomeMessage(conn)
 	case "confirm_subscription":
-		handleConfirmSubscriptionMessage(conn, message, command, originalMessage, clipboardMessage, requestSent)
+		handleConfirmSubscriptionMessage(conn, message, command, originalMessage, clipboardMessage, model, requestSent)
 	case "ping":
 		// do nothing
 	case "disconnect":
@@ -149,7 +152,7 @@ func handleWelcomeMessage(conn *websocket.Conn) {
 	subscribe(conn, uuid)
 }
 
-func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, clipboardMessage string, requestSent *bool) {
+func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, clipboardMessage string, model string, requestSent *bool) {
 	// Ensure the subscription request is not sent more than once
 	if *requestSent {
 		return
@@ -161,7 +164,7 @@ func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]i
 		return
 	}
 
-	onSubscribed(identifier, command, originalMessage, clipboardMessage)
+	onSubscribed(identifier, command, originalMessage, clipboardMessage, model)
 	*requestSent = true
 }
 
@@ -175,7 +178,7 @@ func handleUnknownMessageType(conn *websocket.Conn, message map[string]interface
 	conn.Close(websocket.StatusNormalClosure, "Normal closure")
 }
 
-func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, clipboardMessage string, messagePool *sync.Map, requestSent bool) {
+func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command string, originalMessage string, clipboardMessage string, model string, messagePool *sync.Map, requestSent bool) {
 	var expectedSequenceNumber uint = 0
 
 	for {
@@ -186,14 +189,14 @@ func handleWebSocketMessages(ctx context.Context, conn *websocket.Conn, command 
 			fmt.Println("")
 			break
 		} else if message["type"] != nil {
-			HandleActionCableMessages(conn, command, message, originalMessage, clipboardMessage, &requestSent)
+			HandleActionCableMessages(conn, command, message, originalMessage, clipboardMessage, model, &requestSent)
 		} else {
 			HandleBroadcastedMessages(conn, message, messagePool, &expectedSequenceNumber)
 		}
 	}
 }
 
-func onSubscribed(identifier string, command string, message string, clipboardMessage string) {
+func onSubscribed(identifier string, command string, message string, clipboardMessage string, model string) {
 	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
 	if os.Getenv("NEH_DEBUG") == "t" {
 		fmt.Printf("Personal Access Token: %s\n", personalAccessToken)
@@ -213,7 +216,7 @@ func onSubscribed(identifier string, command string, message string, clipboardMe
 		os.Exit(1)
 	}
 
-	reqBody, err := createRequestBody(message, clipboardMessage, uuid, personalAccessToken)
+	reqBody, err := createRequestBody(message, clipboardMessage, uuid, personalAccessToken, model)
 	if err != nil {
 		fmt.Printf("Failed to marshal request body: %v\n", err)
 		os.Exit(1)
@@ -233,7 +236,7 @@ func unmarshalIdentifier(identifier string) (map[string]interface{}, error) {
 	return identifierMap, nil
 }
 
-func createRequestBody(message, clipboardMessage, uuid, token string) ([]byte, error) {
+func createRequestBody(message, clipboardMessage, uuid, token string, model string) ([]byte, error) {
 	lang := getLangFromConfig()
 	if os.Getenv("NEH_DEBUG") != "" {
 		fmt.Printf("Language: %s\n", lang)
@@ -246,6 +249,11 @@ func createRequestBody(message, clipboardMessage, uuid, token string) ([]byte, e
 		"clipboard_message": clipboardMessage,
 		"lang":              lang,
 	}
+	
+	if model != "" {
+		reqBody["model"] = model
+	}
+	
 	return json.Marshal(reqBody)
 }
 
