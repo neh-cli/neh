@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	cModel string
+)
+
 var cCmd = &cobra.Command{
 	Use:   "c",
 	Short: "Send the contents of the clipboard and a query about that content to the LLM",
@@ -18,6 +22,7 @@ var cCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(cCmd)
+	cCmd.Flags().StringVar(&cModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
 }
 
 func runCCmd(cmd *cobra.Command, args []string) {
@@ -38,7 +43,7 @@ func runCCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = shared.ExecuteWebSocketCommand("c", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("c", queryMessage, clipboardMessage, cModel)
 
 	if err != nil {
 		fmt.Println(err)

@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	refactorModel string
+)
+
 var refactorCmd = &cobra.Command{
 	Use:   "refactor",
 	Short: "Send the source code in the clipboard to LLM and request refactoring.",
@@ -18,6 +22,7 @@ var refactorCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(refactorCmd)
+	refactorCmd.Flags().StringVar(&refactorModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
 }
 
 func runRefactorCmd(cmd *cobra.Command, args []string) {
@@ -29,7 +34,7 @@ func runRefactorCmd(cmd *cobra.Command, args []string) {
 	}
 
 	queryMessage := ""
-	err = shared.ExecuteWebSocketCommand("refactor", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("refactor", queryMessage, clipboardMessage, refactorModel)
 
 	if err != nil {
 		fmt.Println(err)

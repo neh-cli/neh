@@ -46,7 +46,7 @@ func runStatusCmd(cmd *cobra.Command, args []string) {
 	lang := getCurrentLanguage()
 	fmt.Printf("Current language: %s\n", lang)
 
-	err := shared.ExecuteWebSocketCommand("status", queryMessage, clipboardMessage)
+	err := shared.ExecuteWebSocketCommand("status", queryMessage, clipboardMessage, "")
 	if err != nil {
 		fmt.Println(err)
 	}

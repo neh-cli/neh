@@ -30,7 +30,7 @@ func runGitifyCmd(cmd *cobra.Command, args []string) {
 	}
 
 	queryMessage := ""
-	err = shared.ExecuteWebSocketCommand("gitify", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("gitify", queryMessage, clipboardMessage, "")
 
 	if err != nil {
 		fmt.Println(err)

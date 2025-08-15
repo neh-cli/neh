@@ -12,6 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	oModel string
+)
+
 var oCmd = &cobra.Command{
 	Use:   "o",
 	Short: "Send an inquiry message to the AI",
@@ -20,6 +24,7 @@ var oCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(oCmd)
+	oCmd.Flags().StringVar(&oModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
 }
 
 func runOCmd(cmd *cobra.Command, args []string) {
@@ -33,7 +38,7 @@ func runOCmd(cmd *cobra.Command, args []string) {
 		fmt.Printf("Query Message: %s\n", queryMessage)
 	}
 
-	err := shared.ExecuteWebSocketCommand("o", queryMessage, "")
+	err := shared.ExecuteWebSocketCommand("o", queryMessage, "", oModel)
 
 	if err != nil {
 		fmt.Println(err)

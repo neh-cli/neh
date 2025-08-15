@@ -29,7 +29,7 @@ func runTodoCmd(cmd *cobra.Command, args []string) {
 	}
 
 	queryMessage := ""
-	err = shared.ExecuteWebSocketCommand("todo", queryMessage, clipboardMessage)
+	err = shared.ExecuteWebSocketCommand("todo", queryMessage, clipboardMessage, "")
 
 	if err != nil {
 		fmt.Println(err)
