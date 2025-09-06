@@ -303,18 +303,14 @@ brews:
 
     # Caveats - message displayed after installation
     caveats: |
-      if ENV["SHELL"]&.include?("zsh")
-        <<~EOS
-          For zsh users:
-          To avoid "no matches found" errors with special characters,
-          add the following alias to your ~/.zshrc:
+      For zsh users:
+      To avoid "no matches found" errors with special characters (?, *, etc.),
+      add the following alias to your ~/.zshrc:
 
-            alias neh='noglob neh'
+        alias neh='noglob neh'
 
-          Then reload your shell configuration:
-            source ~/.zshrc
-        EOS
-      end
+      Then reload your shell configuration:
+        source ~/.zshrc
 
 nfpms:
   - file_name_template: "{{ .ConventionalFileName }}"
