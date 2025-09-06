@@ -48,3 +48,23 @@ neh completion fish | source
 ```
 
 To make this permanent, you can write the output to a file in your `~/.config/fish/completions` directory.
+
+
+## FAQ
+
+### Q: Getting "zsh: no matches found" error
+
+When running `neh` commands in zsh with special characters like `?` or `*`, you might encounter this error:
+
+```
+% neh o 1 + 1 = ?
+zsh: no matches found: ?
+```
+
+This occurs because zsh interprets certain characters as glob patterns. To resolve this, add the following alias to your `.zshrc`:
+
+```
+alias neh='noglob neh'
+```
+
+This disables glob expansion for the `neh` command, allowing special characters to be passed as arguments.
