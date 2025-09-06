@@ -301,20 +301,18 @@ brews:
     #   bash_completion.install "completions/foo.bash" => "foo"
     #   man1.install "man/foo.1.gz"
 
-    # Post-install message
-    post_install: |
+    # Caveats - message displayed after installation
+    caveats: |
       if ENV["SHELL"]&.include?("zsh")
-        puts <<~EOS
-
-          \e[33m==>\e[0m \e[1mFor zsh users:\e[0m
+        <<~EOS
+          For zsh users:
           To avoid "no matches found" errors with special characters,
           add the following alias to your ~/.zshrc:
 
-            \e[32malias neh='noglob neh'\e[0m
+            alias neh='noglob neh'
 
           Then reload your shell configuration:
-            \e[32msource ~/.zshrc\e[0m
-
+            source ~/.zshrc
         EOS
       end
 
