@@ -22,7 +22,7 @@ var fixCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(fixCmd)
-	fixCmd.Flags().StringVar(&fixModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
+	fixCmd.Flags().StringVar(&fixModel, "model", "", "Specify the AI model to use (e.g., gpt-4.1, gpt-5)")
 }
 
 func runFixCmd(cmd *cobra.Command, args []string) {

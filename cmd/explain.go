@@ -22,7 +22,7 @@ var explainCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(explainCmd)
-	explainCmd.Flags().StringVar(&explainModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
+	explainCmd.Flags().StringVar(&explainModel, "model", "", "Specify the AI model to use (e.g., gpt-4.1, gpt-5)")
 }
 
 func runExplainCmd(cmd *cobra.Command, args []string) {

@@ -22,7 +22,7 @@ var refactorCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(refactorCmd)
-	refactorCmd.Flags().StringVar(&refactorModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
+	refactorCmd.Flags().StringVar(&refactorModel, "model", "", "Specify the AI model to use (e.g., gpt-4.1, gpt-5)")
 }
 
 func runRefactorCmd(cmd *cobra.Command, args []string) {

@@ -20,7 +20,7 @@ var tCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(tCmd)
-	tCmd.Flags().StringVar(&tModel, "model", "", "Specify the AI model to use (e.g., gpt-4, claude-3)")
+	tCmd.Flags().StringVar(&tModel, "model", "", "Specify the AI model to use (e.g., gpt-4.1, gpt-5)")
 }
 
 func runTCmd(cmd *cobra.Command, args []string) {
