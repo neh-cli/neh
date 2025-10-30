@@ -109,6 +109,9 @@ func getPersonalAccessToken() (string, error) {
 func createAuthorizationHeader(token string) http.Header {
 	headers := http.Header{}
 	headers.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
+		headers.Add("X-Promotional-Code", promotionalCode)
+	}
 	return headers
 }
 
@@ -292,6 +295,9 @@ func sendHttpRequest(url string, body []byte, token string) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
+		req.Header.Set("X-Promotional-Code", promotionalCode)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
