@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Usage: ./release
+# Creates a new release if the version in cmd/version.go hasn't been released yet.
+# Automatically extracts the version from cmd/version.go and checks if a corresponding
+# GitHub release exists. If not, it creates and pushes the tag to trigger the release.
+
+set -e
+
+# Extract the version from cmd/version.go using awk
+VERSION=$(awk -F'"' '/const Version =/ {print $2}' cmd/version.go)
+
+if [ -z "$VERSION" ]; then
+  echo "Error: Could not extract version from cmd/version.go"
+  exit 1
+fi
+
+TAG="v$VERSION"
+
+# Check if the release already exists on GitHub
+if gh release view $TAG >/dev/null 2>&1; then
+  echo "Release $TAG already exists. No action needed."
+  exit 0
+fi
+
+# Release doesn't exist, so create it
+echo "Release $TAG does not exist. Creating release..."
+./scripts/create_tag.sh $TAG
+
+echo "Release $TAG has been created successfully."
