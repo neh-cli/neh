@@ -116,9 +116,6 @@ func createAuthorizationHeader(token string) http.Header {
 	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
 		headers.Add("X-Promotional-Code", promotionalCode)
 	}
-	if deviceID, err := GetOrCreateDeviceID(); err == nil {
-		headers.Add("X-Device-ID", deviceID)
-	}
 	return headers
 }
 
@@ -252,12 +249,18 @@ func createRequestBody(message, clipboardMessage, uuid, token string, model stri
 		fmt.Printf("Language: %s\n", lang)
 	}
 
+	deviceID, err := GetOrCreateDeviceID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get device ID: %w", err)
+	}
+
 	reqBody := map[string]interface{}{
 		"message":           message,
 		"uuid":              uuid,
 		"token":             token,
 		"clipboard_message": clipboardMessage,
 		"lang":              lang,
+		"device_id":         deviceID,
 	}
 
 	if model != "" {
@@ -306,9 +309,6 @@ func sendHttpRequest(url string, body []byte, token string) error {
 	}
 	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
 		req.Header.Set("X-Promotional-Code", promotionalCode)
-	}
-	if deviceID, err := GetOrCreateDeviceID(); err == nil {
-		req.Header.Set("X-Device-ID", deviceID)
 	}
 
 	client := &http.Client{}
