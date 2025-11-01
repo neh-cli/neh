@@ -80,9 +80,15 @@ func subscribeToChannel(ctx context.Context, conn *websocket.Conn, requestID str
 }
 
 func createIdentifier(requestID string) (string, error) {
+	deviceID, err := GetOrCreateDeviceID()
+	if err != nil {
+		return "", fmt.Errorf("failed to get device ID: %w", err)
+	}
+
 	identifier := map[string]interface{}{
 		"channel":    "LargeLanguageModelQueryChannel",
 		"request_id": requestID,
+		"device_id":  deviceID,
 	}
 	identifierJSON, err := json.Marshal(identifier)
 	if err != nil {
@@ -127,9 +133,16 @@ func getWSUrl() string {
 }
 
 func subscribe(conn *websocket.Conn, requestID string) {
+	deviceID, err := GetOrCreateDeviceID()
+	if err != nil {
+		fmt.Printf("Failed to get device ID: %v\n", err)
+		return
+	}
+
 	identifier := map[string]interface{}{
 		"channel":    "LargeLanguageModelQueryChannel",
 		"request_id": requestID,
+		"device_id":  deviceID,
 	}
 	identifierJSON, _ := json.Marshal(identifier)
 	content := map[string]interface{}{
