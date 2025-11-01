@@ -116,6 +116,9 @@ func createAuthorizationHeader(token string) http.Header {
 	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
 		headers.Add("X-Promotional-Code", promotionalCode)
 	}
+	if deviceID, err := GetOrCreateDeviceID(); err == nil {
+		headers.Add("X-Device-ID", deviceID)
+	}
 	return headers
 }
 
@@ -303,6 +306,9 @@ func sendHttpRequest(url string, body []byte, token string) error {
 	}
 	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
 		req.Header.Set("X-Promotional-Code", promotionalCode)
+	}
+	if deviceID, err := GetOrCreateDeviceID(); err == nil {
+		req.Header.Set("X-Device-ID", deviceID)
 	}
 
 	client := &http.Client{}
