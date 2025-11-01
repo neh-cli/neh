@@ -56,8 +56,8 @@ func initializeWebSocketConnection(ctx context.Context, headers http.Header) (*w
 		return nil, fmt.Errorf("failed to dial websocket: %w", err)
 	}
 
-	uuidStr := uuid.New().String()
-	if err := subscribeToChannel(ctx, conn, uuidStr); err != nil {
+	requestID := uuid.New().String()
+	if err := subscribeToChannel(ctx, conn, requestID); err != nil {
 		conn.Close(websocket.StatusInternalError, "Subscription failed")
 		return nil, fmt.Errorf("failed to subscribe to channel: %w", err)
 	}
@@ -65,8 +65,8 @@ func initializeWebSocketConnection(ctx context.Context, headers http.Header) (*w
 	return conn, nil
 }
 
-func subscribeToChannel(ctx context.Context, conn *websocket.Conn, uuid string) error {
-	identifier, err := createIdentifier(uuid)
+func subscribeToChannel(ctx context.Context, conn *websocket.Conn, requestID string) error {
+	identifier, err := createIdentifier(requestID)
 	if err != nil {
 		return fmt.Errorf("failed to marshal identifier: %w", err)
 	}
@@ -79,10 +79,10 @@ func subscribeToChannel(ctx context.Context, conn *websocket.Conn, uuid string) 
 	return nil
 }
 
-func createIdentifier(uuid string) (string, error) {
+func createIdentifier(requestID string) (string, error) {
 	identifier := map[string]interface{}{
-		"channel": "LargeLanguageModelQueryChannel",
-		"uuid":    uuid,
+		"channel":    "LargeLanguageModelQueryChannel",
+		"request_id": requestID,
 	}
 	identifierJSON, err := json.Marshal(identifier)
 	if err != nil {
@@ -126,10 +126,10 @@ func getWSUrl() string {
 	return "wss://yoryo-app.onrender.com/cable"
 }
 
-func subscribe(conn *websocket.Conn, uuid string) {
+func subscribe(conn *websocket.Conn, requestID string) {
 	identifier := map[string]interface{}{
-		"channel": "LargeLanguageModelQueryChannel",
-		"uuid":    uuid,
+		"channel":    "LargeLanguageModelQueryChannel",
+		"request_id": requestID,
 	}
 	identifierJSON, _ := json.Marshal(identifier)
 	content := map[string]interface{}{
@@ -155,8 +155,8 @@ func HandleActionCableMessages(conn *websocket.Conn, command string, message map
 }
 
 func handleWelcomeMessage(conn *websocket.Conn) {
-	uuid := uuid.New().String()
-	subscribe(conn, uuid)
+	requestID := uuid.New().String()
+	subscribe(conn, requestID)
 }
 
 func handleConfirmSubscriptionMessage(conn *websocket.Conn, message map[string]interface{}, command, originalMessage string, clipboardMessage string, model string, requestSent *bool) {
@@ -217,13 +217,13 @@ func onSubscribed(identifier string, command string, message string, clipboardMe
 		os.Exit(1)
 	}
 
-	uuid, ok := identifierMap["uuid"].(string)
+	requestID, ok := identifierMap["request_id"].(string)
 	if !ok {
-		fmt.Println("Error: 'uuid' field is missing or not a string")
+		fmt.Println("Error: 'request_id' field is missing or not a string")
 		os.Exit(1)
 	}
 
-	reqBody, err := createRequestBody(message, clipboardMessage, uuid, personalAccessToken, model)
+	reqBody, err := createRequestBody(message, clipboardMessage, requestID, personalAccessToken, model)
 	if err != nil {
 		fmt.Printf("Failed to marshal request body: %v\n", err)
 		os.Exit(1)
@@ -243,7 +243,7 @@ func unmarshalIdentifier(identifier string) (map[string]interface{}, error) {
 	return identifierMap, nil
 }
 
-func createRequestBody(message, clipboardMessage, uuid, token string, model string) ([]byte, error) {
+func createRequestBody(message, clipboardMessage, requestID, token string, model string) ([]byte, error) {
 	lang := getLangFromConfig()
 	if os.Getenv("NEH_DEBUG") != "" {
 		fmt.Printf("Language: %s\n", lang)
@@ -256,7 +256,7 @@ func createRequestBody(message, clipboardMessage, uuid, token string, model stri
 
 	reqBody := map[string]interface{}{
 		"message":           message,
-		"uuid":              uuid,
+		"request_id":        requestID,
 		"token":             token,
 		"clipboard_message": clipboardMessage,
 		"lang":              lang,
