@@ -100,7 +100,9 @@ func createSubscriptionContent(identifier string) map[string]interface{} {
 
 func getPersonalAccessToken() (string, error) {
 	personalAccessToken := os.Getenv("NEH_PERSONAL_ACCESS_TOKEN")
-	if personalAccessToken == "" {
+	promotionalCode := os.Getenv("PROMOTIONAL_CODE")
+
+	if personalAccessToken == "" && promotionalCode == "" {
 		return "", fmt.Errorf("Please set the environment variable NEH_PERSONAL_ACCESS_TOKEN")
 	}
 	return personalAccessToken, nil
@@ -108,7 +110,9 @@ func getPersonalAccessToken() (string, error) {
 
 func createAuthorizationHeader(token string) http.Header {
 	headers := http.Header{}
-	headers.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	if token != "" {
+		headers.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
 	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
 		headers.Add("X-Promotional-Code", promotionalCode)
 	}
@@ -252,11 +256,11 @@ func createRequestBody(message, clipboardMessage, uuid, token string, model stri
 		"clipboard_message": clipboardMessage,
 		"lang":              lang,
 	}
-	
+
 	if model != "" {
 		reqBody["model"] = model
 	}
-	
+
 	return json.Marshal(reqBody)
 }
 
@@ -294,7 +298,9 @@ func sendHttpRequest(url string, body []byte, token string) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
 	if promotionalCode := os.Getenv("PROMOTIONAL_CODE"); promotionalCode != "" {
 		req.Header.Set("X-Promotional-Code", promotionalCode)
 	}
