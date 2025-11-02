@@ -47,7 +47,13 @@ func ExecuteWebSocketCommand(command, message string, clipboardMessage string, m
 }
 
 func initializeWebSocketConnection(ctx context.Context, headers http.Header) (*websocket.Conn, error) {
-	wsURL := getWSUrl()
+	requestID := uuid.New().String()
+	deviceID, err := GetOrCreateDeviceID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get device ID: %w", err)
+	}
+
+	wsURL := getWSUrlWithParams(deviceID, requestID)
 
 	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 		HTTPHeader: headers,
@@ -56,7 +62,6 @@ func initializeWebSocketConnection(ctx context.Context, headers http.Header) (*w
 		return nil, fmt.Errorf("failed to dial websocket: %w", err)
 	}
 
-	requestID := uuid.New().String()
 	if err := subscribeToChannel(ctx, conn, requestID); err != nil {
 		conn.Close(websocket.StatusInternalError, "Subscription failed")
 		return nil, fmt.Errorf("failed to subscribe to channel: %w", err)
@@ -130,6 +135,11 @@ func getWSUrl() string {
 		return "ws://localhost:6060/cable"
 	}
 	return "wss://yoryo-app.onrender.com/cable"
+}
+
+func getWSUrlWithParams(deviceID, requestID string) string {
+	baseURL := getWSUrl()
+	return fmt.Sprintf("%s?device_id=%s&request_id=%s", baseURL, deviceID, requestID)
 }
 
 func subscribe(conn *websocket.Conn, requestID string) {
