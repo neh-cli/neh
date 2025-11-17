@@ -305,12 +305,16 @@ brews:
     caveats: |
       For zsh users:
       To avoid "no matches found" errors with special characters (?, *, etc.),
-      add the following alias to your ~/.zshrc:
+      you can add an alias to your ~/.zshrc:
 
-        alias neh='noglob neh'
+      1. Check if alias already exists:
+           grep "alias neh" ~/.zshrc
 
-      Then reload your shell configuration:
-        source ~/.zshrc
+      2. If not found, add the alias:
+           echo "alias neh='noglob neh'" >> ~/.zshrc
+
+      3. Reload your shell configuration:
+           source ~/.zshrc
 
 nfpms:
   - file_name_template: "{{ .ConventionalFileName }}"
