@@ -61,10 +61,21 @@ When running `neh` commands in zsh with special characters like `?` or `*`, you 
 zsh: no matches found: ?
 ```
 
-This occurs because zsh interprets certain characters as glob patterns. To resolve this, add the following alias to your `.zshrc`:
+This occurs because zsh interprets certain characters as glob patterns. To resolve this, follow these steps:
 
-```
-alias neh='noglob neh'
-```
+1. Check if alias already exists:
+   ```bash
+   grep "alias neh" ~/.zshrc
+   ```
+
+2. If not found, add the alias:
+   ```bash
+   echo "alias neh='noglob neh'" >> ~/.zshrc
+   ```
+
+3. Reload your shell configuration:
+   ```bash
+   source ~/.zshrc
+   ```
 
 This disables glob expansion for the `neh` command, allowing special characters to be passed as arguments.
